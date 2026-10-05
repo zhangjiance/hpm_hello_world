@@ -31,7 +31,7 @@
 /* ---------- Descriptors ---------- */
 
 static const uint8_t device_descriptor[] = {
-    USB_DEVICE_DESCRIPTOR_INIT(USB_2_0, 0xEF, 0x02, 0x01, USBD_VID, USBD_PID, 0x0200, 0x01)
+    USB_DEVICE_DESCRIPTOR_INIT(USB_2_0, 0xEF, 0x02, 0x01, USBD_VID, USBD_PID, 0x0201, 0x01)
 };
 
 static const uint8_t config_descriptor_hs[] = {
@@ -143,12 +143,150 @@ static const char *string_descriptor_cb(uint8_t speed, uint8_t index)
     return string_descriptors[index];
 }
 
+/* ========================================================================
+ * Microsoft OS 1.0 descriptors (WCID)
+ *
+ * Windows binds WinUSB to the DFU runtime interface (0) automatically, so
+ * dfu-util can claim it without a manual Zadig step -- the same mechanism
+ * hpm_dfu_boot and candleLight_fw_hpm_port use.
+ *
+ * The CDC ACM interfaces (1-2) are deliberately NOT listed in the compatible
+ * ID descriptor: Windows then keeps its inbox usbser.sys for them, so the
+ * VCOM still enumerates as a COM port.
+ *
+ * Windows queries:
+ *   GET_DESCRIPTOR(String, index 0xEE)      -> msos_string
+ *   vendor request bRequest=0x20 wIndex=4   -> msos_compat_id
+ *   vendor request bRequest=0x20 wIndex=5   -> msos_ext_prop (wValue = 0)
+ * ======================================================================== */
+#define APP_WINUSB_VENDOR_CODE 0x20U
+
+/* DeviceInterfaceGUID of the app-side DFU runtime interface.  Kept identical
+ * to candleLight's DFU runtime GUID so host tooling stays consistent. */
+#define APP_DFU_INTERFACE_GUID "{3f8b2c47-9d15-4a6e-b2c8-5e0f7a4d1b93}"
+
+/* Microsoft OS String Descriptor, index 0xEE ("MSFT100" + vendor code) */
+static const uint8_t msos_string[] = {
+    0x12, 0x03,
+    'M', 0x00, 'S', 0x00, 'F', 0x00, 'T', 0x00,
+    '1', 0x00, '0', 0x00, '0', 0x00,
+    APP_WINUSB_VENDOR_CODE,
+    0x00,
+};
+
+/* Compatible ID Feature Descriptor: one interface (0, DFU) -> WINUSB */
+static const uint8_t msos_compat_id[] = {
+    0x28, 0x00, 0x00, 0x00, /* dwLength = 16 + 24 * 1 */
+    0x00, 0x01,             /* bcdVersion 1.0 */
+    0x04, 0x00,             /* wIndex 0x0004 */
+    0x01,                   /* bCount */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* reserved[7] */
+    0x00,                   /* bFirstInterfaceNumber = 0 (DFU runtime) */
+    0x01,                   /* reserved1 */
+    0x57, 0x49, 0x4E, 0x55, /* compatibleID "WINUSB\0\0" */
+    0x53, 0x42, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, /* subCompatibleID */
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* reserved2[6] */
+};
+
+/*
+ * Extended Properties Feature Descriptor (DeviceInterfaceGUIDs), assembled at
+ * init time from the plain ASCII GUID above so the UTF-16LE conversion cannot
+ * be mistyped.
+ *   10 header + 4 dwPropertySize + 4 dwPropertyDataType
+ *   + 2 wPropertyNameLength + 42 L"DeviceInterfaceGUIDs"
+ *   + 4 dwPropertyDataLength + 80 REG_MULTI_SZ payload
+ */
+#define MSOS_EXT_PROP_LEN (0x92U)
+/* D-cache is enabled and usb_dcache_clean() is a no-op here, so this RAM
+ * buffer is handed to the controller from the non-cacheable section. */
+static USB_NOCACHE_RAM_SECTION uint8_t msos_ext_prop[MSOS_EXT_PROP_LEN];
+
+_Static_assert((10U + 4U + 4U + 2U + (sizeof("DeviceInterfaceGUIDs") * 2U) + 4U +
+                ((sizeof(APP_DFU_INTERFACE_GUID) + 1U) * 2U)) == MSOS_EXT_PROP_LEN,
+               "msos_ext_prop size mismatch");
+
+/* Returned for wValue != 0: a valid but empty property set. */
+static const uint8_t msos_ext_prop_empty[] = {
+    0x0a, 0x00, 0x00, 0x00, /* dwLength = 10 */
+    0x00, 0x01,             /* bcdVersion 1.0 */
+    0x05, 0x00,             /* wIndex 0x0005 */
+    0x00, 0x00,             /* bCount = 0 */
+};
+
+/* CherryUSB indexes this array with setup->wValue, so keep two entries. */
+static const uint8_t *msos_ext_prop_list[2];
+
+static const struct usb_msosv1_descriptor composite_msosv1 = {
+    .string = msos_string,
+    .vendor_code = APP_WINUSB_VENDOR_CODE,
+    .compat_id = msos_compat_id,
+    .comp_id_property = msos_ext_prop_list,
+};
+
+static void msos_ext_prop_build(void)
+{
+    static const char prop_name[] = "DeviceInterfaceGUIDs";
+    static const char guid[] = APP_DFU_INTERFACE_GUID;
+    const uint32_t name_bytes = (uint32_t)sizeof(prop_name) * 2U;      /* + NUL */
+    const uint32_t data_bytes = ((uint32_t)sizeof(guid) + 1U) * 2U;    /* + 2 NUL */
+    const uint32_t section_len = 4U + 4U + 2U + name_bytes + 4U + data_bytes;
+    uint32_t p = 0U;
+    uint32_t i;
+
+    msos_ext_prop[p++] = (uint8_t)(10U + section_len);
+    msos_ext_prop[p++] = (uint8_t)((10U + section_len) >> 8);
+    msos_ext_prop[p++] = 0x00U;
+    msos_ext_prop[p++] = 0x00U;
+    msos_ext_prop[p++] = 0x00U; /* bcdVersion 1.0 */
+    msos_ext_prop[p++] = 0x01U;
+    msos_ext_prop[p++] = 0x05U; /* wIndex 0x0005 */
+    msos_ext_prop[p++] = 0x00U;
+    msos_ext_prop[p++] = 0x01U; /* bCount = 1 */
+    msos_ext_prop[p++] = 0x00U;
+
+    msos_ext_prop[p++] = (uint8_t)(section_len);
+    msos_ext_prop[p++] = (uint8_t)(section_len >> 8);
+    msos_ext_prop[p++] = 0x00U;
+    msos_ext_prop[p++] = 0x00U;
+    msos_ext_prop[p++] = 0x07U; /* dwPropertyDataType: REG_MULTI_SZ */
+    msos_ext_prop[p++] = 0x00U;
+    msos_ext_prop[p++] = 0x00U;
+    msos_ext_prop[p++] = 0x00U;
+    msos_ext_prop[p++] = (uint8_t)(name_bytes);
+    msos_ext_prop[p++] = (uint8_t)(name_bytes >> 8);
+
+    for (i = 0U; i < (uint32_t)sizeof(prop_name); i++) {
+        msos_ext_prop[p++] = (uint8_t)prop_name[i];
+        msos_ext_prop[p++] = 0x00U;
+    }
+
+    msos_ext_prop[p++] = (uint8_t)(data_bytes);
+    msos_ext_prop[p++] = (uint8_t)(data_bytes >> 8);
+    msos_ext_prop[p++] = 0x00U;
+    msos_ext_prop[p++] = 0x00U;
+
+    for (i = 0U; i < (uint32_t)sizeof(guid); i++) {
+        msos_ext_prop[p++] = (uint8_t)guid[i];
+        msos_ext_prop[p++] = 0x00U;
+    }
+    /* REG_MULTI_SZ terminator */
+    msos_ext_prop[p++] = 0x00U;
+    msos_ext_prop[p++] = 0x00U;
+
+    msos_ext_prop_list[0] = msos_ext_prop;
+    msos_ext_prop_list[1] = msos_ext_prop_empty;
+}
+
 const struct usb_descriptor composite_descriptor = {
     .device_descriptor_callback         = device_descriptor_cb,
     .config_descriptor_callback         = config_descriptor_cb,
     .device_quality_descriptor_callback = device_quality_descriptor_cb,
     .other_speed_descriptor_callback    = other_speed_descriptor_cb,
     .string_descriptor_callback         = string_descriptor_cb,
+    /* MS OS 1.0 (WCID) so Windows installs WinUSB for the DFU interface */
+    .msosv1_descriptor = &composite_msosv1,
     .msosv2_descriptor = NULL,
     .bos_descriptor    = NULL,
 };
@@ -282,6 +420,9 @@ static void usbd_event_handler(uint8_t busid, uint8_t event)
 
 void app_usb_init(uint8_t busid, uintptr_t reg_base)
 {
+    /* Assemble the WCID extended properties (DeviceInterfaceGUIDs) */
+    msos_ext_prop_build();
+
     usbd_desc_register(busid, &composite_descriptor);
 
     /* DFU runtime interface — registered first => interface number 0 */
