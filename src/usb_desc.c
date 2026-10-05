@@ -11,6 +11,7 @@
 #include "usbd_core.h"
 #include "usbd_cdc_acm.h"
 #include "hpm_dfu_trigger.h"
+#include "hpm_romapi.h"
 #include "usb_config.h"
 
 /* CDC ACM endpoint addresses */
@@ -27,6 +28,33 @@
 #endif
 
 #define USB_CONFIG_SIZE (9 + DFU_IF_LEN + CDC_ACM_DESCRIPTOR_LEN)
+
+/*
+ * USB iSerialNumber must be unique per board (Windows keys the device instance
+ * on it, so a constant breaks as soon as two boards are plugged in at once).
+ * Derive it from the chip UUID, using the same OTP words and format as the DFU
+ * bootloader, so one board reports the same serial in both modes.
+ */
+#define OTP_UUID_WORD_IDX (88U) /* hpm_soc_feature.h: OTP_SOC_UUID_IDX */
+
+static char serial_str[25];
+
+static void serial_str_build(void)
+{
+    static const char hex[] = "0123456789ABCDEF";
+    uint32_t i;
+
+    for (i = 0U; i < 3U; i++) {
+        const uint32_t word =
+            ROM_API_TABLE_ROOT->otp_driver_if->read_from_shadow(OTP_UUID_WORD_IDX + i);
+        uint32_t n;
+
+        for (n = 0U; n < 8U; n++) {
+            serial_str[8U * i + n] = hex[(word >> (28U - 4U * n)) & 0xFU];
+        }
+    }
+    serial_str[24] = '\0';
+}
 
 /* ---------- Descriptors ---------- */
 
@@ -97,7 +125,7 @@ static const char *string_descriptors[] = {
     (const char[]){ 0x09, 0x04 }, /* Langid */
     "HPMicro",                    /* Manufacturer */
     "HPM DFU App",                /* Product */
-    "2026062900",                 /* Serial Number */
+    serial_str,                   /* Serial Number, filled by serial_str_build() */
     "DFU Runtime",                /* iInterface 4 */
     "CDC ACM",                    /* iInterface 5 */
 };
@@ -420,6 +448,9 @@ static void usbd_event_handler(uint8_t busid, uint8_t event)
 
 void app_usb_init(uint8_t busid, uintptr_t reg_base)
 {
+    /* Chip UUID -> USB iSerialNumber (must be unique per board) */
+    serial_str_build();
+
     /* Assemble the WCID extended properties (DeviceInterfaceGUIDs) */
     msos_ext_prop_build();
 
