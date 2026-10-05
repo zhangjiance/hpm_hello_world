@@ -36,6 +36,15 @@
             "binaryDir": "${sourceDir}/build/hpm5300evk-release"
         },
         {
+            "name": "hpm5300evklite-release",
+            "displayName": "HPM5300EVKLite (Release)",
+            "inherits": "base",
+            "cacheVariables": {
+                "BOARD": "hpm5300evklite"
+            },
+            "binaryDir": "${sourceDir}/build/hpm5300evklite-release"
+        },
+        {
             "name": "hpm5300evk-debug",
             "displayName": "HPM5300EVK (Debug)",
             "inherits": "base-debug",
@@ -43,6 +52,15 @@
                 "BOARD": "hpm5300evk"
             },
             "binaryDir": "${sourceDir}/build/hpm5300evk-debug"
+        },
+        {
+            "name": "hpm5300evklite-debug",
+            "displayName": "HPM5300EVKLite (Debug)",
+            "inherits": "base-debug",
+            "cacheVariables": {
+                "BOARD": "hpm5300evklite"
+            },
+            "binaryDir": "${sourceDir}/build/hpm5300evklite-debug"
         },
         {
             "name": "hpm5321_usb2can-release",
@@ -322,8 +340,18 @@
             "jobs": 8
         },
         {
+            "name": "hpm5300evklite-release",
+            "configurePreset": "hpm5300evklite-release",
+            "jobs": 8
+        },
+        {
             "name": "hpm5300evk-debug",
             "configurePreset": "hpm5300evk-debug",
+            "jobs": 8
+        },
+        {
+            "name": "hpm5300evklite-debug",
+            "configurePreset": "hpm5300evklite-debug",
             "jobs": 8
         },
         {
