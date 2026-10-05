@@ -46,7 +46,7 @@ int main(void)
             if (key_press_count >= 5) {
                 printf("\n[KEY] Held 500ms, entering bootloader...\n");
                 board_delay_ms(50);
-                hpm_dfu_reboot_to_dfu();
+                hpm_reboot_to_boot();
             }
         } else {
             key_press_count = 0;

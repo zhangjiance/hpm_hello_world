@@ -14,7 +14,7 @@ This is a minimal "hello world" style application extended with DFU-runtime supp
 - Initializes the USB device (`src/usb_desc.c`) as a composite device consisting of:
   - a **DFU runtime** interface that responds to `DFU_DETACH` (i.e. `dfu-util -e`), then writes the DFU trigger magic to a retention register (BGPR / PDGO) and reboots into the bootloader;
   - a **CDC ACM VCOM** interface (virtual serial port) that echoes back any data it receives (loopback).
-- Optionally, holding the user button for ~500 ms (5 consecutive reads) also triggers `hpm_dfu_reboot_to_dfu()`.
+- Optionally, holding the user button for ~500 ms (5 consecutive reads) also triggers `hpm_reboot_to_boot()`.
 
 It is designed to be paired with the `hpm_dfu_boot` bootloader: the bootloader occupies the first 128K of Flash, and this APP is linked to run right after it.
 

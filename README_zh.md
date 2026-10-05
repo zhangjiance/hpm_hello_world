@@ -14,7 +14,7 @@
 - 以复合 USB 设备形式初始化 USB（`src/usb_desc.c`），包含：
   - **DFU runtime** 接口：响应 `DFU_DETACH`（即 `dfu-util -e`），将 DFU 触发魔数写入保留寄存器（BGPR / PDGO）后重启进入 bootloader；
   - **CDC ACM VCOM** 接口（虚拟串口）：将收到的数据回传（loopback）。
-- 可选地，长按用户按键约 500 ms（连续 5 次检测）也会触发 `hpm_dfu_reboot_to_dfu()`。
+- 可选地，长按用户按键约 500 ms（连续 5 次检测）也会触发 `hpm_reboot_to_boot()`。
 
 本工程用于与 `hpm_dfu_boot` bootloader 配对：bootloader 占据 Flash 前 128K，本 APP 链接在其之后运行。
 

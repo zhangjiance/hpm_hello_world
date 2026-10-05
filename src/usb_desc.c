@@ -171,7 +171,7 @@ static int dfu_handler(uint8_t busid, struct usb_setup_packet *setup,
     (void)busid;
     switch (setup->bRequest) {
     case DFU_DETACH:
-        hpm_dfu_reboot_to_dfu();
+        hpm_reboot_to_boot();
         return 0;
     case DFU_GETSTATUS: {
         static uint8_t status[6] = { 0, 0, 0, 0, 0, 0 }; /* OK, appIDLE */

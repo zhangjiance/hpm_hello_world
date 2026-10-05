@@ -15,8 +15,9 @@ extern "C" {
  * Returns true if APP requested DFU mode before last reset. */
 bool hpm_dfu_check_and_clear_trigger(void);
 
-/* Write DFU trigger magic and reset — call from APP to enter DFU mode. */
-void hpm_dfu_reboot_to_dfu(void) __attribute__((noreturn));
+/* Write DFU trigger magic and re-enter the DFU bootloader via the ROM
+ * run_bootloader API (primary image) — call from APP to enter DFU mode. */
+void hpm_reboot_to_boot(void) __attribute__((noreturn));
 
 #ifdef __cplusplus
 }
