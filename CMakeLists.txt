@@ -1,7 +1,7 @@
 # Copyright (c) 2021 HPMicro
 # SPDX-License-Identifier: BSD-3-Clause
 
-set(APP_NAME hello_world)
+set(APP_NAME hpm_hello_world)
 
 cmake_minimum_required(VERSION 3.13)
 
