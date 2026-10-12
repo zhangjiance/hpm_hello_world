@@ -1,6 +1,6 @@
 # hpm_hello_world
 
-A **sample application (APP)** for HPMicro RISC-V MCUs that works together with the [`hpm_dfu_boot`](../hpm_dfu_boot) DFU bootloader. It runs as the user firmware that the bootloader jumps to, and additionally exposes a **DFU runtime** interface so a host can ask it to reboot back into the bootloader for firmware upgrade.
+A **sample application (APP)** for HPMicro RISC-V MCUs that works together with the [`hpm_dfu_boot`](https://github.com/zhangjiance/hpm_dfu_boot.git) DFU bootloader. It runs as the user firmware that the bootloader jumps to, and additionally exposes a **DFU runtime** interface so a host can ask it to reboot back into the bootloader for firmware upgrade.
 
 > 中文说明见 [README_zh.md](./README_zh.md)。Build instructions: [README_build.md](./README_build.md) (English) / [README_build_zh.md](./README_build_zh.md) (中文).
 

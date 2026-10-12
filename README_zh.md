@@ -1,6 +1,6 @@
 # hpm_hello_world
 
-面向 HPMicro RISC-V MCU 的**示例应用程序（APP）**，需与 [`hpm_dfu_boot`](../hpm_dfu_boot) DFU 引导程序配合使用。它作为 bootloader 跳转进入的用户固件运行，并额外提供 **DFU runtime** 接口，使主机可以请求其重启回到 bootloader 进行固件升级。
+面向 HPMicro RISC-V MCU 的**示例应用程序（APP）**，需与 [`hpm_dfu_boot`](https://github.com/zhangjiance/hpm_dfu_boot.git) DFU 引导程序配合使用。它作为 bootloader 跳转进入的用户固件运行，并额外提供 **DFU runtime** 接口，使主机可以请求其重启回到 bootloader 进行固件升级。
 
 > English overview: [README.md](./README.md). 编译指导： [README_build.md](./README_build.md)（英文）/ [README_build_zh.md](./README_build_zh.md)（中文）。
 
