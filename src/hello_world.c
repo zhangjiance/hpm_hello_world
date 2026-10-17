@@ -17,10 +17,28 @@
 
 #define LED_FLASH_PERIOD_IN_MS 100
 
+#if defined(BOARD_HAS_CHAN_LEDS) && BOARD_HAS_CHAN_LEDS
+#define LED_STARTUP_STEPS   8U
+#define LED_STARTUP_STEP_MS 30U
+
+static void led_startup_anim(void)
+{
+    for (uint8_t i = 0U; i < LED_STARTUP_STEPS; i++) {
+        board_led_toggle();
+        board_delay_ms(LED_STARTUP_STEP_MS);
+    }
+    board_led_write(BOARD_LED_OFF_LEVEL);
+}
+#endif
+
 int main(void)
 {
     board_init();
     board_init_led_pins();
+
+#if defined(BOARD_HAS_CHAN_LEDS) && BOARD_HAS_CHAN_LEDS
+    led_startup_anim();
+#endif
 
     board_timer_create(LED_FLASH_PERIOD_IN_MS, board_led_toggle);
 
