@@ -123,8 +123,8 @@ ninja -C build/hpm5301evklite-release -j8
 构建完成后，输出位于：
 
 ```
-build/<preset>/output/hello_world.elf
-build/<preset>/output/hello_world.hex
+build/<preset>/output/hpm_hello_world-<board>.elf
+build/<preset>/output/hpm_hello_world-<board>.hex
 ```
 
 - `.elf`：可执行镜像，可用于调试 / OpenOCD 烧录；

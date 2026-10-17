@@ -60,7 +60,7 @@ cmake --preset hpm5301evklite-release
 cmake --build --preset hpm5301evklite-release
 ```
 
-Artifacts are located at `build/<preset>/output/hello_world.elf` and `hello_world.hex`.
+Artifacts are located at `build/<preset>/output/hpm_hello_world-<board>.elf` and `hpm_hello_world-<board>.hex`.
 
 ---
 

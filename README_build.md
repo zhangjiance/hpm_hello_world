@@ -123,8 +123,8 @@ ninja -C build/hpm5301evklite-release -j8
 After a successful build, the output is located at:
 
 ```
-build/<preset>/output/hello_world.elf
-build/<preset>/output/hello_world.hex
+build/<preset>/output/hpm_hello_world-<board>.elf
+build/<preset>/output/hpm_hello_world-<board>.hex
 ```
 
 - `.elf`: executable image, for debugging / OpenOCD flashing;

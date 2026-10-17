@@ -60,7 +60,7 @@ cmake --preset hpm5301evklite-release
 cmake --build --preset hpm5301evklite-release
 ```
 
-产物位于 `build/<preset>/output/hello_world.elf` 与 `hello_world.hex`。
+产物位于 `build/<preset>/output/hpm_hello_world-<board>.elf` 与 `hpm_hello_world-<board>.hex`。
 
 ---
 
