@@ -313,6 +313,9 @@ void board_init_gpio_pins(void) {
                      BOARD_BTN_GPIO_PIN);
 }
 
+/* This board has no user LED: board_init() already sets the pins up. */
+void board_init_led_pins(void) {}
+
 void board_init_usb(USB_Type *ptr) {
   if (ptr == HPM_USB0) {
     init_usb_pins(ptr);

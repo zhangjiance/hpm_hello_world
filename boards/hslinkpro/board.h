@@ -327,6 +327,8 @@ void board_led_toggle(void);
 
 void board_init_gpio_pins(void);
 
+void board_init_led_pins(void);
+
 void board_init_usb(USB_Type *ptr);
 
 void board_init_console(void);
