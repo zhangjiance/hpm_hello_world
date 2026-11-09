@@ -63,6 +63,24 @@
             "binaryDir": "${sourceDir}/build/hpm5300evklite-debug"
         },
         {
+            "name": "hpm5151evklite-release",
+            "displayName": "HPM5151EVKLite (Release)",
+            "inherits": "base",
+            "cacheVariables": {
+                "BOARD": "hpm5151evklite"
+            },
+            "binaryDir": "${sourceDir}/build/hpm5151evklite-release"
+        },
+        {
+            "name": "hpm5151evklite-debug",
+            "displayName": "HPM5151EVKLite (Debug)",
+            "inherits": "base-debug",
+            "cacheVariables": {
+                "BOARD": "hpm5151evklite"
+            },
+            "binaryDir": "${sourceDir}/build/hpm5151evklite-debug"
+        },
+        {
             "name": "hscant-lite-release",
             "displayName": "HSCanT-Lite (Release)",
             "inherits": "base",
@@ -352,6 +370,16 @@
         {
             "name": "hpm5300evklite-debug",
             "configurePreset": "hpm5300evklite-debug",
+            "jobs": 8
+        },
+        {
+            "name": "hpm5151evklite-release",
+            "configurePreset": "hpm5151evklite-release",
+            "jobs": 8
+        },
+        {
+            "name": "hpm5151evklite-debug",
+            "configurePreset": "hpm5151evklite-debug",
             "jobs": 8
         },
         {
